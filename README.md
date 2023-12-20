@@ -22,4 +22,4 @@ In the export dialog:
   - Press "Export" to start the export.
 
 ## License
-CC 4.0-BY
+CC BY 4.0
