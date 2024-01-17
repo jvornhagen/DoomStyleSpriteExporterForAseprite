@@ -1,6 +1,7 @@
--- Created by int_game(): https://int-game.itch.io/
--- tested on Aseprite v1.32-x64 with API version 26; Please report any bugs/feature requests at 
+-- Created by Jan Vornhagen: https://int-game.itch.io/
+-- tested on Aseprite v1.32-x64 with API version 26; Please report any bugs/feature requests at https://github.com/jvornhagen/DoomStyleSpriteExporterForAseprite
 -- License "CC-BY-4.0"
+-- Special thanks to https://www.patreon.com/posts/aseprite-export-96589806 who devised a workaround for the SaveFileCopyAs glitch that does not allow the saving of single frames.
 
 
 -- Setup
@@ -44,17 +45,17 @@ local function MirroredNumber (angleNumber)
 	return mirrored_numbers[angleNumber] or 99
 end
 
-local function SaveSprite(exportName, exportFrame)
-	--app.alert("Save Sprite called with export Name: " .. exportName .. "; and Frame: " .. exportFrame.frameNumber)
-	app.command.SaveFileCopyAs{		
-		ui=false,
-		filename  = exportName,
-		fromFrame = spr.frames[i],
-		toFrame   = spr.frames[i]
-	}
-	
-	return
-end
+--local function SaveSprite(exportName, exportFrame)
+--	--app.alert("Save Sprite called with export Name: " .. exportName .. "; and Frame: " .. exportFrame.frameNumber)
+--	app.command.SaveFileCopyAs{		
+--		ui=false,
+--		filename  = exportName,
+--		fromFrame = spr.frames[i].frameNumber-1,
+--		toFrame   = spr.frames[i].frameNumber-1
+--	}
+--	
+--	return
+--end
 
 local function CreateName(iteration, path, name, angle, extension, isMirrored)
 	local returnName
@@ -70,27 +71,43 @@ end
 
 
 local function ExportAllFrames(myExportPath, mySpriteName, myAngle, myExtension, isMirrored)
-	for i=1, #(app.sprite.frames) do
 	
+	for i,frame in ipairs(spr.frames) do
 		local exportName = CreateName(i, myExportPath, mySpriteName, myAngle, myExtension, isMirrored)	
-		
-		local exportFrame = spr.frames[i]
-		
-		SaveSprite(exportName, exportFrame)
-		
+		local img = Image(spr.width, spr.height)
+		img:drawSprite(spr, i, Point(0, 0))
+		img:saveAs(exportName)	
 	end
+	--for i=1, #(app.sprite.frames) do
+	--
+	--	local exportName = CreateName(i, myExportPath, mySpriteName, myAngle, myExtension, isMirrored)	
+	--	
+	--	local exportFrame = spr.frames[i]
+	--	
+	--	SaveSprite(exportName, exportFrame)
+	--	
+	--end
 end
 
 local function ExportSelectedFramesOnly(myExportPath, mySpriteName, myAngle, myExtension, isMirrored)
-	for i=1, #(frameRange) do
 	
-		local exportName = CreateName(i, myExportPath, mySpriteName, myAngle, myExtension, isMirrored)
-		
-		local exportFrame = frameRange[i]
-		
-		SaveSprite(exportName, exportFrame)
-
+	for i,frame in ipairs(frameRange) do
+		print("Current Frame: " .. i .. " of " .. #(frameRange))
+		local exportName = CreateName(i, myExportPath, mySpriteName, myAngle, myExtension, isMirrored)	
+		local img = Image(spr.width, spr.height)
+		img:drawSprite(spr, frameRange[i], Point(0, 0))
+		img:saveAs(exportName)	
 	end
+	
+	--for i=1, #(frameRange) do
+	--
+	--	local exportName = CreateName(i, myExportPath, mySpriteName, myAngle, myExtension, isMirrored)
+	--	
+	--	local exportFrame = frameRange[i]
+	--	
+	--	SaveSprite(exportName, exportFrame)
+	--
+	--end
 end
 
 local function DoomStyleExport(myExportPath, mySpriteName, myAngle, myExtension, isMirrored, onlyExportSelectedFrames)
@@ -128,7 +145,7 @@ local function ValidFrameNumber(exportSelectedFrames)
 end
 
 -- Preview File Name
-local function UpdateNamePreview(mySpriteName, myAngle, myExtension, isMirrored)	
+local function UpdateNamePreview(mySpriteName, myAngle, myExtension, isMirrored)
 	if isMirrored then
 		previewName = mySpriteName .. "A" .. myAngle .. "A" .. MirroredNumber(myAngle) .. myExtension
 	else
@@ -169,6 +186,7 @@ end
 --
 
 -- Main
+
 
 local dlg = Dialog("Doom-Style Sprite Naming Exporter")
 local data = dlg.data
@@ -258,20 +276,20 @@ dlg:entry{
 		
 -- FilePath
    :file{id="exportPath",
-		label="File path",
+		label="Set file path:",
 		filename=previewName,
 		filetypes={".ase", ".aseprite", ".bmp", ".css", ".flc", ".fli", ".gif", ".ico", ".jpeg", ".jpg", ".pcx", ".pcc", ".png", ".qoi", ".svg", ".tga", ".webp"},
 		save=true}
-		
+	
 -- Button Export
    :button{ id="export", text="Export", focus=true }
 -- Button Cancel
    :button{ id="cancel", text="Cancel" }
 
-	NamePreviewHandler(dlg.data) 
-	dlg:modify {id="exportPath", filename=previewName} 
+NamePreviewHandler(dlg.data) 
+	dlg:modify {id="exportPath", filename=previewName}
 	dlg:repaint()
-  
+
 -- Show the Dialog
    dlg:show()
 
