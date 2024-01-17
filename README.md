@@ -17,7 +17,7 @@ In the export dialog:
   - If you select an angle you can mirror (eg 2,3,4), a checkbox to enable mirroring appears. Ie: Turn POSSA2 to POSSA2A8
   - Check "Only export selected frames?" to do just that
   - Select the File Type
-  - Click on File Path to change the location of the exported files. No need to name the exported files as the script will name them.
+  - Click on File Path to change the location of the exported files. No need to name the exported files as the script will name them. (Defaults to the open sprites file path)
     - The file path button will display a preview of the name for the first file.
   - Press "Export" to start the export.
 
