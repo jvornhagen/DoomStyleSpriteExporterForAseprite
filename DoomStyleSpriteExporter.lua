@@ -45,19 +45,8 @@ local function MirroredNumber (angleNumber)
 	return mirrored_numbers[angleNumber] or 99
 end
 
---local function SaveSprite(exportName, exportFrame)
---	--app.alert("Save Sprite called with export Name: " .. exportName .. "; and Frame: " .. exportFrame.frameNumber)
---	app.command.SaveFileCopyAs{		
---		ui=false,
---		filename  = exportName,
---		fromFrame = spr.frames[i].frameNumber-1,
---		toFrame   = spr.frames[i].frameNumber-1
---	}
---	
---	return
---end
 
-local function CreateName(iteration, path, name, angle, extension, isMirrored)
+local function CreateName(iteration, path, name, startingLetter, angle, extension, isMirrored)
 	local returnName
 	
 	if isMirrored then
@@ -69,48 +58,45 @@ local function CreateName(iteration, path, name, angle, extension, isMirrored)
 	return returnName
 end
 
+local function LetterPosition(val)
+   
+   letter = tostring(val)
+   
+   for i=1,#alphabetArray do
+      if alphabetArray[i] == letter then 
+         return i
+      end
+   end
+   return "NotInArray"
+end
 
-local function ExportAllFrames(myExportPath, mySpriteName, myAngle, myExtension, isMirrored)
+
+local function ExportAllFrames(myExportPath, mySpriteName, myStartingLetter, myAngle, myExtension, isMirrored)
+	startingIteration = LetterPosition(myStartingLetter)
 	
-	for i,frame in ipairs(spr.frames) do
-		local exportName = CreateName(i, myExportPath, mySpriteName, myAngle, myExtension, isMirrored)	
+	for i,frame in ipairs(spr.frames) do		
+		local exportName = CreateName(startingIteration + i-1, myExportPath, mySpriteName, myStartingLetter, myAngle, myExtension, isMirrored)	
 		local img = Image(spr.width, spr.height)
 		img:drawSprite(spr, i, Point(0, 0))
 		img:saveAs(exportName)	
 	end
-	--for i=1, #(app.sprite.frames) do
-	--
-	--	local exportName = CreateName(i, myExportPath, mySpriteName, myAngle, myExtension, isMirrored)	
-	--	
-	--	local exportFrame = spr.frames[i]
-	--	
-	--	SaveSprite(exportName, exportFrame)
-	--	
-	--end
+	
 end
 
-local function ExportSelectedFramesOnly(myExportPath, mySpriteName, myAngle, myExtension, isMirrored)
+local function ExportSelectedFramesOnly(myExportPath, mySpriteName, myStartingLetter, myAngle, myExtension, isMirrored)
+	
+	startingIteration = LetterPosition(myStartingLetter)
 	
 	for i,frame in ipairs(frameRange) do
-		print("Current Frame: " .. i .. " of " .. #(frameRange))
-		local exportName = CreateName(i, myExportPath, mySpriteName, myAngle, myExtension, isMirrored)	
+		local exportName = CreateName(startingIteration + i-1, myExportPath, mySpriteName, myStartingLetter, myAngle, myExtension, isMirrored)	
 		local img = Image(spr.width, spr.height)
 		img:drawSprite(spr, frameRange[i], Point(0, 0))
 		img:saveAs(exportName)	
 	end
 	
-	--for i=1, #(frameRange) do
-	--
-	--	local exportName = CreateName(i, myExportPath, mySpriteName, myAngle, myExtension, isMirrored)
-	--	
-	--	local exportFrame = frameRange[i]
-	--	
-	--	SaveSprite(exportName, exportFrame)
-	--
-	--end
 end
 
-local function DoomStyleExport(myExportPath, mySpriteName, myAngle, myExtension, isMirrored, onlyExportSelectedFrames)
+local function DoomStyleExport(myExportPath, mySpriteName, myStartingLetter, myAngle, myExtension, isMirrored, onlyExportSelectedFrames)
 	-- clean export Name
 	local exportPath = app.fs.filePath(myExportPath)
 	if exportPath == "" then
@@ -119,10 +105,10 @@ local function DoomStyleExport(myExportPath, mySpriteName, myAngle, myExtension,
 	
 	if onlyExportSelectedFrames then
 	-- only export selected Frames
-		ExportSelectedFramesOnly(exportPath, mySpriteName, myAngle, myExtension, isMirrored)
+		ExportSelectedFramesOnly(exportPath, mySpriteName, myStartingLetter, myAngle, myExtension, isMirrored)
 	else
 	-- export All Frames
-		ExportAllFrames(exportPath, mySpriteName, myAngle, myExtension, isMirrored)
+		ExportAllFrames(exportPath, mySpriteName, myStartingLetter, myAngle, myExtension, isMirrored)
 	end
 
 end
@@ -144,22 +130,49 @@ local function ValidFrameNumber(exportSelectedFrames)
 	end
 end
 
--- Preview File Name
-local function UpdateNamePreview(mySpriteName, myAngle, myExtension, isMirrored)
-	if isMirrored then
-		previewName = mySpriteName .. "A" .. myAngle .. "A" .. MirroredNumber(myAngle) .. myExtension
+-- Check if too many frames when not starting at A
+local function CheckAvailableFrames(exportSelectedFrames, letter)
+
+	givenLetterPosition = LetterPosition(letter)
+	if givenLetterPosition == "NotInArray" then
+		app.alert("Not a valid letter. Please choose A-Z, [, \\, or ]")		
+		return false
+	end
+	
+	letterContingent = #alphabetArray - givenLetterPosition
+	
+	if exportSelectedFrames then
+		if #(frameRange) > letterContingent then
+			app.alert("Starting with letter " .. letter .. ", there is not enough letters left to save all selected frames. Please start with an earlier letter or choose less frames")
+			return false
+		else
+			return true
+		end
+	elseif #(app.sprite.frames) > letterContingent then
+		app.alert("Starting with letter " .. letter .. ", there is not enough letters left to save all selected frames. Please start with an earlier letter or choose less frames")		
+		return false
+		
 	else
-		previewName = mySpriteName .. "A" .. myAngle .. myExtension
+		return true
+	end 
+end
+
+-- Preview File Name
+local function UpdateNamePreview(mySpriteName, myStartingLetter, myAngle, myExtension, isMirrored)
+	if isMirrored then
+		previewName = mySpriteName .. myStartingLetter .. myAngle .. "A" .. MirroredNumber(myAngle) .. myExtension
+	else
+		previewName = mySpriteName .. myStartingLetter .. myAngle .. myExtension
 	end	
 end
 
 local function NamePreviewHandler(data)
 	if data == nil then
-		UpdateNamePreview("ABCD", 0, ".png", false)
+		UpdateNamePreview("ABCD", "A", 0, ".png", false)
 	else
-		UpdateNamePreview(data.spriteName, data.angle, data.exportExtension, data.mirrored)		
+		UpdateNamePreview(data.spriteName, data.startingLetter, data.angle, data.exportExtension, data.mirrored)		
 	end
-	--app.alert("Name Preview Handled, new name:" .. previewName)
+	--app.alert("Name Preview Handled, new name: " .. previewName)
 end
 
 local function MirrorPossible(angle)
@@ -266,6 +279,17 @@ dlg:entry{
 	:check{id="exportSelectedFrames",
 		label="Only export selected frames?",
 		selected=false}	
+-- Starting letter
+	:entry{
+		id="startingLetter",
+		label="Letter to start export at",
+		text= "A",
+		onchange= function() 
+			NamePreviewHandler(dlg.data)
+			dlg:modify {id="exportPath", filename=previewName} 
+			dlg:repaint() 
+		end
+		}
 
 -- Extension
    :combobox{id="exportExtension",
@@ -298,9 +322,12 @@ if not dlg.data.export then
 end
 
 -- First check if export is possible
-if not ValidFrameNumber(data.exportSelectedFrames) then
+if not ValidFrameNumber(dlg.data.exportSelectedFrames) then
+	return
+end
+if not CheckAvailableFrames(dlg.data.exportSelectedFrames, dlg.data.startingLetter) then
 	return
 end
 
 -- if so, start export with given info
-DoomStyleExport(dlg.data.exportPath, dlg.data.spriteName, dlg.data.angle, dlg.data.exportExtension, dlg.data.mirrored, dlg.data.exportSelectedFrames)
+DoomStyleExport(dlg.data.exportPath, dlg.data.spriteName, dlg.data.startingLetter, dlg.data.angle, dlg.data.exportExtension, dlg.data.mirrored, dlg.data.exportSelectedFrames)
