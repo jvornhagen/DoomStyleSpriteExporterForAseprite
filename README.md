@@ -1,4 +1,4 @@
-# Doom Style Sprite Exporter For Aseprite
+# Doom Naming Style (DNS) Exporter For Aseprite
 This script allows to automatically export Aseprite animations as a series of images named in the Doom naming style.
 
 Created/tested on Aseprite v1.3.2-x64 on Windows.
