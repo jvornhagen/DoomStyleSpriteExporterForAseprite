@@ -25,4 +25,5 @@ In the export dialog:
 CC BY 4.0
 
 ## Known Issue:
-The use of \ in a file name messes things up atm. Export still works, but one file will be exported into a new sub folder (at least on windows).
+[1] The use of \ in a file name messes things up atm. Export still works, but one file will be exported into a new sub folder (at least on windows).
+[2] It is required to set the export path anew every time the script is called.
