@@ -158,21 +158,29 @@ local function CheckAvailableFrames(exportSelectedFrames, letter)
 end
 
 -- Preview File Name
-local function UpdateNamePreview(mySpriteName, myStartingLetter, myAngle, myExtension, isMirrored)
+local function UpdateNamePreview(myFilePath, mySpriteName, myStartingLetter, myAngle, myExtension, isMirrored, onlySelectedFrames)
+	
 	if isMirrored then
-		previewName = mySpriteName .. myStartingLetter .. myAngle .. "A" .. MirroredNumber(myAngle) .. myExtension
+		previewName = myFilePath .. app.fs.pathSeparator .. mySpriteName .. myStartingLetter .. myAngle .. myStartingLetter .. MirroredNumber(myAngle) .. myExtension
 	else
-		previewName = mySpriteName .. myStartingLetter .. myAngle .. myExtension
+		previewName = myFilePath .. app.fs.pathSeparator .. mySpriteName .. myStartingLetter .. myAngle .. myExtension
 	end	
 end
 
 local function NamePreviewHandler(data)
 	if data == nil then
-		UpdateNamePreview("ABCD", "A", 0, ".png", false)
+		UpdateNamePreview(filepath, "ABCD", "A", 0, ".png", false)
 	else
-		UpdateNamePreview(data.spriteName, data.startingLetter, data.angle, data.exportExtension, data.mirrored)		
+		UpdateNamePreview(app.fs.filePath(data.exportPath), data.spriteName, data.startingLetter, data.angle, data.exportExtension, data.mirrored, data.exportSelectedFrames)		
 	end
-	--app.alert("Name Preview Handled, new name: " .. previewName)
+end
+
+local function SetStartingLetter(data)
+	returnLetter = "A"
+	if(data.exportSelectedFrames) then
+		returnLetter = alphabetArray[frameRange[1].frameNumber]
+	end	
+	return returnLetter
 end
 
 local function MirrorPossible(angle)
@@ -270,7 +278,7 @@ dlg:entry{
 		visible=false,
 		onclick= function() 
 			NamePreviewHandler(dlg.data) 
-			dlg:modify {id="exportPath", filename=previewName} 
+			dlg:modify {id="exportPath", filename=previewName}
 			dlg:repaint() 
 		end
 		}
@@ -278,7 +286,14 @@ dlg:entry{
 -- Checkbox Export all or just selection
 	:check{id="exportSelectedFrames",
 		label="Only export selected frames?",
-		selected=false}	
+		selected=false,
+		onclick = function()						
+			dlg:modify {id="startingLetter", text=SetStartingLetter(dlg.data)}
+			NamePreviewHandler(dlg.data)
+			dlg:modify {id="exportPath", filename=previewName} 
+			dlg:repaint()
+		end
+		}	
 -- Starting letter
 	:entry{
 		id="startingLetter",
@@ -296,6 +311,11 @@ dlg:entry{
 		label="File Type",
 		option=".png",
 		options={".ase", ".aseprite", ".bmp", ".css", ".flc", ".fli", ".gif", ".ico", ".jpeg", ".jpg", ".pcx", ".pcc", ".png", ".qoi", ".svg", ".tga", ".webp"},
+		onchange= function() 
+			NamePreviewHandler(dlg.data)
+			dlg:modify {id="exportPath", filename=previewName} 
+			dlg:repaint() 
+		end
 		}
 		
 -- FilePath
@@ -303,7 +323,8 @@ dlg:entry{
 		label="Set file path:",
 		filename=previewName,
 		filetypes={".ase", ".aseprite", ".bmp", ".css", ".flc", ".fli", ".gif", ".ico", ".jpeg", ".jpg", ".pcx", ".pcc", ".png", ".qoi", ".svg", ".tga", ".webp"},
-		save=true}
+		save=true
+		}
 	
 -- Button Export
    :button{ id="export", text="Export", focus=true }
