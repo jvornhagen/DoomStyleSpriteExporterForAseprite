@@ -15,7 +15,7 @@ In the export dialog:
   - Name: Set the name for the sprite to be exported (Defaults to the first 4 letters of the sprite)
   - Sprite Angle: Select the angle the srite represents by pressing one of the buttons. An explanation can be found at https://zdoom.org/wiki/Sprite#Angles
   - If you select an angle you can mirror (eg 2,3,4), a checkbox to enable mirroring appears. Ie: Turn POSSA2 to POSSA2A8
-  - Check "Only export selected frames?" to do just that
+  - Check "Only export selected frames?" to do just that. This will also change the starting letter to the letter of the first frame selected (or back to A).
   - Select the File Type
   - Click on File Path to change the location of the exported files. No need to name the exported files as the script will name them. (Defaults to the open sprites file path)
     - The file path button will display a preview of the name for the first file.
